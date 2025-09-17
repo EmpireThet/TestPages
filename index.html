@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Динамический генератор QR-кодов</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Динамический генератор QR-кодов</h1>
+            <p>Создайте QR-код для любого сайта</p>
+        </header>
+
+        <main>
+            <div class="input-section">
+                <input type="url" id="url-input" placeholder="Введите URL сайта (например, https://github.com)" />
+                <button id="generate-btn">Сгенерировать QR-код</button>
+            </div>
+
+            <div class="qr-section">
+                <div id="qrcode"></div>
+                <div id="qr-info" class="hidden">
+                    <p>QR-код для: <span id="qr-url"></span></p>
+                    <button id="download-btn">Скачать QR-код</button>
+                </div>
+            </div>
+
+            <div class="history-section hidden">
+                <h2>Недавно созданные QR-коды</h2>
+                <div id="history-list"></div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Размещено на <a href="https://github.com/EmpireThet/TestPages" target="_blank">GitHub Pages</a></p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
