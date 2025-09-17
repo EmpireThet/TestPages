@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Динамический генератор QR-кодов</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        main {
+            padding: 30px 20px;
+        }
+
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        #url-input {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        #url-input:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 15px 25px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        #clear-btn {
+            background: #e74c3c;
+        }
+
+        #clear-btn:hover {
+            background: #c0392b;
+        }
+
+        .qr-section {
+            text-align: center;
+            padding: 20px;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            background: #f9f9f9;
+        }
+
+        #qrcode {
+            margin: 20px auto;
+            display: inline-block;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        #qr-info {
+            margin-top: 20px;
+        }
+
+        #qr-url {
+            word-break: break-all;
+            color: #3498db;
+            font-weight: bold;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #eee;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .history-section {
+            margin-top: 30px;
+        }
+
+        .history-section h2 {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+            color: #2c3e50;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .history-item:hover {
+            background: #f8f9fa;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .timestamp {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: #ecf0f1;
+            color: #7f8c8d;
+        }
+
+        footer a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .button-group {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Динамический генератор QR-кодов</h1>
+            <p class="subtitle">Создайте QR-код для любого сайта</p>
+        </header>
+
+        <main>
+            <div class="input-section">
+                <input type="url" id="url-input" placeholder="Введите URL сайта (например, https://github.com)" />
+                <div class="button-group">
+                    <button id="generate-btn">Сгенерировать QR-код</button>
+                    <button id="clear-btn">Очистить</button>
+                </div>
+            </div>
+
+            <div class="success-message" id="success-message">
+                QR-код успешно создан! Вы можете сканировать его или скачать.
+            </div>
+
+            <div class="qr-section">
+                <div id="qrcode"></div>
+                <div id="qr-info" class="hidden">
+                    <p>QR-код для: <span id="qr-url"></span></p>
+                    <div class="button-group">
+                        <button id="download-btn">Скачать QR-код</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="history-section hidden" id="history-section">
+                <h2>Недавно созданные QR-коды</h2>
+                <div id="history-list"></div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Размещено на <a href="https://github.com/EmpireThet/TestPages" target="_blank">GitHub Pages</a></p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlInput = document.getElementById('url-input');
+            const generateBtn = document.getElementById('generate-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            const qrcodeDiv = document.getElementById('qrcode');
+            const qrInfo = document.getElementById('qr-info');
+            const qrUrl = document.getElementById('qr-url');
+            const downloadBtn = document.getElementById('download-btn');
+            const historySection = document.getElementById('history-section');
+            const historyList = document.getElementById('history-list');
+            const successMessage = document.getElementById('success-message');
+            
+            let currentQRCode = null;
+            let history = JSON.parse(localStorage.getItem('qrHistory')) || [];
+            
+            // Показать историю, если она есть
+            if (history.length > 0) {
+                renderHistory();
+                historySection.classList.remove('hidden');
+            }
+            
+            generateBtn.addEventListener('click', generateQRCode);
+            clearBtn.addEventListener('click', clearInput);
+            downloadBtn.addEventListener('click', downloadQRCode);
+            
+            // Генерация QR-кода при нажатии Enter
+            urlInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    generateQRCode();
+                }
+            });
+            
+            function generateQRCode() {
+                const url = urlInput.value.trim();
+                
+                if (!url) {
+                    alert('Пожалуйста, введите URL');
+                    return;
+                }
+                
+                // Добавляем https:// если отсутствует протокол
+                let formattedUrl = url;
+                if (!/^https?:\/\//i.test(url)) {
+                    formattedUrl = 'https://' + url;
+                }
+                
+                try {
+                    // Проверяем, является ли введенный текст валидным URL
+                    new URL(formattedUrl);
+                } catch (e) {
+                    alert('Пожалуйста, введите корректный URL');
+                    return;
+                }
+                
+                // Очищаем предыдущий QR-код
+                if (currentQRCode) {
+                    qrcodeDiv.innerHTML = '';
+                }
+                
+                // Создаем новый QR-код
+                currentQRCode = new QRCode(qrcodeDiv, {
+                    text: formattedUrl,
+                    width: 200,
+                    height: 200,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                
+                // Показываем информацию о QR-коде
+                qrUrl.textContent = formattedUrl;
+                qrInfo.classList.remove('hidden');
+                successMessage.style.display = 'block';
+                
+                // Добавляем в историю
+                addToHistory(formattedUrl);
+            }
+            
+            function clearInput() {
+                urlInput.value = '';
+                urlInput.focus();
+                
+                if (currentQRCode) {
+                    qrcodeDiv.innerHTML = '';
+                    currentQRCode = null;
+                }
+                
+                qrInfo.classList.add('hidden');
+                successMessage.style.display = 'none';
+            }
+            
+            function addToHistory(url) {
+                // Проверяем, есть ли уже такой URL в истории
+                const existingIndex = history.findIndex(item => item.url === url);
+                
+                if (existingIndex !== -1) {
+                    // Удаляем существующий элемент, чтобы добавить его в начало
+                    history.splice(existingIndex, 1);
+                }
+                
+                // Добавляем новый элемент в начало истории
+                history.unshift({
+                    url: url,
+                    timestamp: new Date().toISOString()
+                });
+                
+                // Ограничиваем историю 10 элементами
+                if (history.length > 10) {
+                    history.pop();
+                }
+                
+                // Сохраняем в localStorage
+                localStorage.setItem('qrHistory', JSON.stringify(history));
+                
+                // Обновляем отображение истории
+                renderHistory();
+                historySection.classList.remove('hidden');
+            }
+            
+            function renderHistory() {
+                historyList.innerHTML = '';
+                
+                history.forEach(item => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item';
+                    
+                    const urlSpan = document.createElement('span');
+                    urlSpan.textContent = item.url;
+                    
+                    const timeSpan = document.createElement('span');
+                    timeSpan.textContent = new Date(item.timestamp).toLocaleString();
+                    timeSpan.className = 'timestamp';
+                    
+                    historyItem.appendChild(urlSpan);
+                    historyItem.appendChild(timeSpan);
+                    
+                    // При клике на элемент истории заполняем поле ввода
+                    historyItem.addEventListener('click', () => {
+                        urlInput.value = item.url;
+                        generateQRCode();
+                    });
+                    
+                    historyList.appendChild(historyItem);
+                });
+            }
+            
+            function downloadQRCode() {
+                if (!currentQRCode) return;
+                
+                const canvas = qrcodeDiv.querySelector('canvas');
+                if (!canvas) return;
+                
+                const image = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                const url = qrUrl.textContent;
+                
+                // Извлекаем домен из URL для имени файла
+                let domain = "qrcode";
+                try {
+                    domain = new URL(url).hostname;
+                } catch (e) {
+                    // В случае ошибки используем общее имя
+                }
+                
+                link.download = `qrcode-${domain}.png`;
+                link.href = image;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+            
+            // Автофокус на поле ввода при загрузке страницы
+            urlInput.focus();
+            
+            // Пример URL для демонстрации
+            urlInput.value = "https://github.com/EmpireThet";
+        });
+    </script>
+</body>
+</html>
