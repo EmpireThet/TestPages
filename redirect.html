@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Перенаправление</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .redirect-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .redirect-info span {
+            color: #3498db;
+            font-weight: 600;
+            word-break: break-all;
+        }
+
+        .countdown {
+            font-size: 48px;
+            color: #e74c3c;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #redirect-btn {
+            background: #27ae60;
+            color: white;
+        }
+
+        #redirect-btn:hover {
+            background: #219653;
+            transform: translateY(-2px);
+        }
+
+        #cancel-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        #cancel-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .security-note {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #ecf0f1;
+            color: #7f8c8d;
+        }
+
+        .footer a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        @media (max-width: 500px) {
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Перенаправление</h1>
+            <p>Система безопасного перехода</p>
+        </div>
+
+        <div class="content">
+            <div class="redirect-info">
+                <p>Вы будете перенаправлены на:</p>
+                <span id="target-url">Загрузка...</span>
+            </div>
+
+            <div class="countdown" id="countdown">5</div>
+            <p>Автоматическое перенаправление через: <span id="seconds">5</span> секунд</p>
+
+            <div class="button-group">
+                <button id="redirect-btn">Перейти сейчас</button>
+                <button id="cancel-btn">Отменить</button>
+            </div>
+
+            <div class="security-note">
+                <p>⚠️ Внимание: Проверяйте URL перед переходом. Не переходите на подозрительные сайты.</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Динамический QR-код от <a href="https://github.com/EmpireThet" target="_blank">EmpireThet</a></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const targetUrlSpan = document.getElementById('target-url');
+            const countdownEl = document.getElementById('countdown');
+            const secondsEl = document.getElementById('seconds');
+            const redirectBtn = document.getElementById('redirect-btn');
+            const cancelBtn = document.getElementById('cancel-btn');
+            
+            // Получаем параметры из URL
+            const urlParams = new URLSearchParams(window.location.search);
+            let targetUrl = urlParams.get('url');
+            let countdown = 5;
+            let countdownInterval;
+            
+            // Проверяем наличие URL параметра
+            if (!targetUrl) {
+                targetUrlSpan.textContent = 'URL не указан';
+                countdownEl.style.display = 'none';
+                secondsEl.parentElement.style.display = 'none';
+                redirectBtn.disabled = true;
+                return;
+            }
+            
+            // Добавляем https:// если отсутствует протокол
+            if (!/^https?:\/\//i.test(targetUrl)) {
+                targetUrl = 'https://' + targetUrl;
+            }
+            
+            // Проверяем валидность URL
+            try {
+                new URL(targetUrl);
+                targetUrlSpan.textContent = targetUrl;
+                startCountdown();
+            } catch (e) {
+                targetUrlSpan.textContent = 'Неверный URL: ' + targetUrl;
+                countdownEl.style.display = 'none';
+                secondsEl.parentElement.style.display = 'none';
+                redirectBtn.disabled = true;
+            }
+            
+            function startCountdown() {
+                countdownInterval = setInterval(function() {
+                    countdown--;
+                    countdownEl.textContent = countdown;
+                    secondsEl.textContent = countdown;
+                    
+                    if (countdown <= 0) {
+                        clearInterval(countdownInterval);
+                        redirectToTarget();
+                    }
+                }, 1000);
+            }
+            
+            function redirectToTarget() {
+                // Сохраняем историю переходов
+                saveToHistory(targetUrl);
+                // Перенаправляем
+                window.location.href = targetUrl;
+            }
+            
+            function cancelRedirect() {
+                clearInterval(countdownInterval);
+                countdownEl.textContent = 'Отменено';
+                secondsEl.parentElement.style.display = 'none';
+                redirectBtn.disabled = false;
+                cancelBtn.disabled = true;
+                
+                // Показываем сообщение
+                const message = document.createElement('div');
+                message.style.marginTop = '20px';
+                message.style.padding = '15px';
+                message.style.background = '#d4edda';
+                message.style.color = '#155724';
+                message.style.borderRadius = '8px';
+                message.innerHTML = '<p>Перенаправление отменено. Вы можете перейти вручную или вернуться назад.</p>';
+                document.querySelector('.content').appendChild(message);
+            }
+            
+            function saveToHistory(url) {
+                // Сохраняем историю переходов в localStorage
+                let history = JSON.parse(localStorage.getItem('redirectHistory')) || [];
+                
+                // Добавляем новый переход
+                history.unshift({
+                    url: url,
+                    timestamp: new Date().toISOString(),
+                    domain: new URL(url).hostname
+                });
+                
+                // Ограничиваем историю 50 записями
+                if (history.length > 50) {
+                    history.pop();
+                }
+                
+                localStorage.setItem('redirectHistory', JSON.stringify(history));
+            }
+            
+            // Обработчики событий
+            redirectBtn.addEventListener('click', redirectToTarget);
+            cancelBtn.addEventListener('click', cancelRedirect);
+            
+            // Открывать ссылки в новом окне при клике колесиком мыши
+            targetUrlSpan.addEventListener('auxclick', function(e) {
+                if (e.button === 1) { // Колесико мыши
+                    e.preventDefault();
+                    window.open(targetUrl, '_blank');
+                }
+            });
+            
+            // Быстрый переход по Ctrl+Click
+            targetUrlSpan.addEventListener('click', function(e) {
+                if (e.ctrlKey) {
+                    e.preventDefault();
+                    window.open(targetUrl, '_blank');
+                }
+            });
+            
+            // Добавляем title для подсказки
+            targetUrlSpan.title = "Щелкните для копирования, Ctrl+Click для открытия в новой вкладке";
+            
+            // Копирование URL при клике
+            targetUrlSpan.style.cursor = 'pointer';
+            targetUrlSpan.addEventListener('click', function() {
+                navigator.clipboard.writeText(targetUrl)
+                    .then(() => {
+                        const originalText = this.textContent;
+                        this.textContent = 'URL скопирован!';
+                        setTimeout(() => {
+                            this.textContent = originalText;
+                        }, 2000);
+                    })
+                    .catch(err => {
+                        console.error('Ошибка копирования: ', err);
+                    });
+            });
+        });
+    </script>
+</body>
+</html>
